@@ -30,8 +30,8 @@ public class FourierTransform {
         return sum;
     }
 
-    public static void rectangleMethod(double width) {
-        System.out.println("Estimation for width = " + width + ":\t" + calculateSum(width, -5, 5, 8));
+    public static void rectangleMethod(double width, double a, double b, double ksi) {
+        System.out.println("Estimation for width = " + width + ":\t" + calculateSum(width, a, b, ksi));
     }
 
     public static void main(String[] args) {
@@ -39,6 +39,6 @@ public class FourierTransform {
         System.out.println("Число отсчетов 1000.");
         System.out.println("ksi = 8");
         System.out.println("От -5 до 5");
-        rectangleMethod(0.0001);
+        rectangleMethod(0.0001, -5, 5, 8);
     }
 }
