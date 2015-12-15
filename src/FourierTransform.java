@@ -23,7 +23,7 @@ public class FourierTransform {
 //            multi = function(x).multiply(step);
             multi = integrand(x, ksi).multiply(step);
 //            multi = function(x) * step;
-            // TODO: 16.12.2015 Переделать это кривое ничтожество. Не работает метод add.
+            // TODO: 16.12.2015 Переделать. Не работает метод add.
             sum = new Complex(sum.getReal() + multi.getReal(), sum.getImaginary() + multi.getImaginary());
 //            sum.add(multi);
         }
@@ -31,14 +31,18 @@ public class FourierTransform {
     }
 
     public static void rectangleMethod(double width, double a, double b, double ksi) {
-        System.out.println("Estimation for width = " + width + ":\t" + calculateSum(width, a, b, ksi));
+        System.out.println("Для шага = " + width + ":\t" + calculateSum(width, a, b, ksi));
     }
 
     public static void main(String[] args) {
         System.out.println("Функция x^2");
-        System.out.println("Число отсчетов 1000.");
+        System.out.println("Число отсчетов 10000.");
         System.out.println("ksi = 8");
         System.out.println("От -5 до 5");
         rectangleMethod(0.0001, -5, 5, 8);
+        System.out.println();
+        // TODO: 16.12.2015 ТАК ?
+        rectangleMethod(0.0001, -5, -4.9999, 8);
+
     }
 }
