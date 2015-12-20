@@ -1,12 +1,16 @@
 import org.apache.commons.math3.complex.Complex;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.util.Scanner;
 
 public class FourierTransform {
 
@@ -43,84 +47,187 @@ public class FourierTransform {
 
     public static void main(String[] args) {
 
-        int n = 256;
-        double a = -5;
-        double b = 5;
-        double step = (b - a) / n;
         double precision = 0.001;
+        String functionName = "exp^(4ix)";
 
-        System.out.println("Преобразование Фурье от функции x^2");
-        System.out.println("Число отсчетов " + n);
-        System.out.println("Интегрирование в промежутке от " + a + " до " + b);
-        System.out.println("ksi:\t Re: \t Im:");
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Считаем преобразование Фурье от " + functionName + ".");
+        System.out.print("Введите начало промежутка интегрирования по x: ");
+        double a = scanner.nextDouble();
+        System.out.print("Введите конец промежутка интегрирования по x: ");
+        double b = scanner.nextDouble();
+        while (b <= a) {
+            System.out.println("Конец промежутка не может быть меньше начала!");
+            System.out.print("Введите конец промежутка интегрирования по x: ");
+            b = scanner.nextDouble();
+        }
+        Scanner intScanner = new Scanner(System.in);
+        System.out.print("Введите количество шагов: ");
+        int n = intScanner.nextInt();
+        while (n <= 0) {
+            System.out.println("Количество отсчетов должно быть больше 0!");
+            System.out.print("Введите количество шагов: ");
+            n = intScanner.nextInt();
+        }
+        double step = (b - a) / n;
 
-        for (double ksi = a; ksi <= b; ksi += step) {
-            showAll(precision, a, b, ksi);
+        double ksi;
+        double ksiA;
+        double ksiB;
+        double stepKsi;
+
+        System.out.print("Введите начало промежутка интегрирования по ξ: ");
+        ksiA = scanner.nextDouble();
+        System.out.print("Введите конец промежутка интегрирования по ξ: ");
+        ksiB = scanner.nextDouble();
+        while (ksiB <= ksiA) {
+            System.out.println("Конец промежутка не может быть меньше начала!");
+            System.out.print("Введите конец промежутка интегрирования по ξ: ");
+            ksiB = scanner.nextDouble();
         }
 
-        /*XYSeriesCollection collection = new XYSeriesCollection();
+        System.out.print("Введите количество шагов: ");
+        int ksiN = intScanner.nextInt();
+        while (ksiN <= 0) {
+            System.out.println("Количество отсчетов должно быть больше 0!");
+            System.out.print("Введите количество шагов: ");
+            ksiN = intScanner.nextInt();
+        }
 
-        XYSeries series = new XYSeries("Re");
-        XYSeries series1 = new XYSeries("Im");
+        stepKsi = (ksiB - ksiA) / ksiN;
+
+        File fileOfTransformFunction = new File("Функция " + functionName + ".gr");
+
+        try {
+            if (!fileOfTransformFunction.exists()) {
+                fileOfTransformFunction.createNewFile();
+//                System.out.println("Файл создан");
+            }
+            else {
+//                System.out.println("Файл существует");
+            }
+        } catch (IOException e) {
+            System.out.println("Ошибка при создании файла");
+        }
+
+
+        /*JFileChooser fileChooser = new JFileChooser("function");
+        fileChooser.setVisible(true);
+        fileChooser.setSize(800, 600);
+        int ret = fileChooser.showDialog(null, "Выберите файл с функцией");
+
+        if (ret == JFileChooser.APPROVE_OPTION) {
+            try {
+                FileReader reader = new FileReader(fileChooser.getSelectedFile());
+                BufferedReader bufferedReader = new BufferedReader(reader);
+                String builder;
+                do {
+                    builder = bufferedReader.readLine();
+                    if (builder != null) {
+                        System.out.println(builder);
+                    }
+                } while (builder != null);
+            } catch (FileNotFoundException e) {
+                System.out.println("Файл не найден!");
+            } catch (IOException e) {
+                System.out.println("Ошибка ввода/вывода!");
+            }
+        }*/
+
+        XYSeriesCollection collectionOfFunction = new XYSeriesCollection();
+
+        XYSeries realSeries = new XYSeries("Re");
+        XYSeries imaginarySeries = new XYSeries("Im");
+
         for (double i = a; i <= b ; i+=step) {
-            series.add(i, function(i).getReal());
-            series1.add(i, function(i).getImaginary());
+            realSeries.add(i, function(i).getReal());
+            imaginarySeries.add(i, function(i).getImaginary());
         }
-        collection.addSeries(series);
-        collection.addSeries(series1);
-        JFreeChart chart = ChartFactory.createXYLineChart("f(x) = e^(4ix)", "x", "y", collection, PlotOrientation.VERTICAL, true, true, true);
-//        JFreeChart chart = ChartFactory.createXYLineChart("f(x) = sin2x", "x", "y", collection, PlotOrientation.VERTICAL, true, true, true);
-//        JFreeChart chart = ChartFactory.createXYLineChart("f(x) = x^2", "x", "y", collection, PlotOrientation.VERTICAL, true, true, true);
-        JFrame frame = new JFrame("График функции");
-        frame.getContentPane().add(new ChartPanel(chart));
-        frame.setSize(800, 600);
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        XYSeriesCollection collection1 = new XYSeriesCollection();
-        XYSeries series2 = new XYSeries("Re");
-        XYSeries series3 = new XYSeries("Im");
+        collectionOfFunction.addSeries(realSeries);
+        collectionOfFunction.addSeries(imaginarySeries);
+        JFreeChart chartOfFunction = ChartFactory.createXYLineChart("f(x) = " + functionName, "x", "y",
+                collectionOfFunction, PlotOrientation.VERTICAL, true, true, true);
 
-        XYSeriesCollection collection2 = new XYSeriesCollection();
-        XYSeries series4 = new XYSeries("Квадрат модуля преобразования");
-
-        XYSeriesCollection collection3 = new XYSeriesCollection();
-        XYSeries series5 = new XYSeries("Аргумент преобразования");
-
-        for (double ksi = a; ksi <= b; ksi += step) {
-//            showAll(precision, a, b, ksi);
-            transformFunction = calculateTransform(precision, a, b, ksi);
-            series2.add(ksi, transformFunction.getReal());
-            series3.add(ksi, transformFunction.getImaginary());
-            series4.add(ksi, transformFunction.abs() * transformFunction.abs());
-            series5.add(ksi, transformFunction.getArgument());
+        try {
+            ChartUtilities.saveChartAsPNG(new File("picture/График функции " + functionName + ".png"),
+                    chartOfFunction, 800, 600);
+        } catch (IOException e) {
+            System.out.println("Ошибка записи!");
         }
-        collection1.addSeries(series2);
-        collection1.addSeries(series3);
-        JFreeChart chart1 = ChartFactory.createXYLineChart("F(\u03BE)", "x", "y", collection1, PlotOrientation.VERTICAL, true, true, true);
-        JFrame frame1 = new JFrame("График преобразования Фурье от функции");
-        frame1.getContentPane().add(new ChartPanel(chart1));
-        frame1.setSize(800, 600);
-        frame1.setVisible(true);
-        frame1.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        collection2.addSeries(series4);
 
-        JFreeChart chart2 = ChartFactory.createXYLineChart("Квадрат модуля F(\u03BE)", "x", "y", collection2, PlotOrientation.VERTICAL, true, true, true);
-        JFrame frame2 = new JFrame("График квадрата модуля преобразования Фурье от функции");
-        frame2.getContentPane().add(new ChartPanel(chart2));
-        frame2.setSize(800, 600);
-        frame2.setVisible(true);
-        frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        collection3.addSeries(series5);
+        XYSeriesCollection collectionOfTransformFunction = new XYSeriesCollection();
+        XYSeries realSeriesOfTransformFunction = new XYSeries("Re");
+        XYSeries imaginarySeriesOfTransformFunction = new XYSeries("Im");
 
-        JFreeChart chart3 = ChartFactory.createXYLineChart("Аргумент F(\u03BE)", "x", "y", collection3, PlotOrientation.VERTICAL, true, true, true);
-        JFrame frame3 = new JFrame("График амплитуды преобразования Фурье от функции");
-        frame3.getContentPane().add(new ChartPanel(chart3));
-        frame3.setSize(800, 600);
-        frame3.setVisible(true);
-        frame3.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
+        XYSeriesCollection collectionOfIntensity = new XYSeriesCollection();
+        XYSeries seriesOfIntensity = new XYSeries("Квадрат модуля преобразования");
+
+        XYSeriesCollection collectionOfPhase = new XYSeriesCollection();
+        XYSeries seriesOfPhase = new XYSeries("Аргумент преобразования");
+
+
+        FileWriter  fileWriter = null;
+        try {
+            fileWriter = new FileWriter(fileOfTransformFunction);
+//            fileWriter = new FileWriter(new File("exp^(4ix).gr"));
+            fileWriter.write("Преобразование Фурье от " + functionName + "\n" + (ksiN + 1) + "\n");
+            for (ksi = ksiA; ksi <= ksiB; ksi += stepKsi) {
+                transformFunction = calculateTransform(precision, a, b, ksi);
+                realSeriesOfTransformFunction.add(ksi, transformFunction.getReal());
+                imaginarySeriesOfTransformFunction.add(ksi, transformFunction.getImaginary());
+                seriesOfIntensity.add(ksi, transformFunction.abs() * transformFunction.abs());
+                seriesOfPhase.add(ksi, transformFunction.getArgument());
+                fileWriter.write(ksi + " " + transformFunction.getReal() + " " + transformFunction.getImaginary() + "\n");
+                fileWriter.flush();
+            }
+
+        } catch (IOException e) {
+            System.out.println("Ошибка записи!");
+        } finally {
+            if (fileWriter != null) {
+                try {
+                    fileWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        collectionOfTransformFunction.addSeries(realSeriesOfTransformFunction);
+        collectionOfTransformFunction.addSeries(imaginarySeriesOfTransformFunction);
+        JFreeChart chart1 = ChartFactory.createXYLineChart("F(ξ)", "ξ", "y", collectionOfTransformFunction, PlotOrientation.VERTICAL, true, true, true);
+
+        try {
+            ChartUtilities.saveChartAsPNG(new File("picture/Преобразование Фурье " + functionName + ".png"), chart1,
+                    800, 600);
+        } catch (IOException e) {
+            System.out.println("Ошибка записи!");
+        }
+
+        collectionOfIntensity.addSeries(seriesOfIntensity);
+
+        JFreeChart chart2 = ChartFactory.createXYLineChart("Квадрат модуля F(ξ)", "ξ", "y", collectionOfIntensity, PlotOrientation.VERTICAL, true, true, true);
+
+        try {
+            ChartUtilities.saveChartAsPNG(new File("picture/Квадрат модуля F(ξ) от " + functionName + ".png"), chart2,
+                    800, 600);
+        } catch (IOException e) {
+            System.out.println("Ошибка записи!");
+        }
+
+        collectionOfPhase.addSeries(seriesOfPhase);
+
+        JFreeChart chart3 = ChartFactory.createXYLineChart("Аргумент F(ξ)", "ξ", "y", collectionOfPhase, PlotOrientation.VERTICAL, true, true, true);
+
+        try {
+            ChartUtilities.saveChartAsPNG(new File("picture/Аргумент F(ξ) от " + functionName + ".png"), chart3,
+                    800, 600);
+        } catch (IOException e) {
+            System.out.println("Ошибка записи!");
+        }
 
 
     }
