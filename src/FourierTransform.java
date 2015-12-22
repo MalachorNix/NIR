@@ -26,19 +26,8 @@ public class FourierTransform {
     public static Complex calculateTransform(double step, double a, double b, double ksi) {
         Complex sum = new Complex(0, 0);
         Complex multi;
-        /*for (int i = 0; i < x.length; i++) {
+        for (int i = 0; i < x.length; i++) {
             multi = integrand(x[i], ksi, complex[i]).multiply(step);
-            sum = new Complex(sum.getReal() + multi.getReal(), sum.getImaginary() + multi.getImaginary());
-        }*/
-        int i = 0;
-//        double h = (b - a) / 256;
-        /*for (double x = a; x < b; x += *//*h*//*step) {
-            multi = integrand(x, ksi, complex[i]).multiply(*//*h*//*step);
-            i++;
-            sum = new Complex(sum.getReal() + multi.getReal(), sum.getImaginary() + multi.getImaginary());
-        }*/
-        for (int g = 0; g < x.length; g++) {
-            multi = integrand(x[g], ksi, complex[g]).multiply(step);
             sum = new Complex(sum.getReal() + multi.getReal(), sum.getImaginary() + multi.getImaginary());
         }
         return sum;
@@ -49,12 +38,7 @@ public class FourierTransform {
         String functionName = null;
         int n = 0;
         double[] ksi = null;
-        int ksiN = 0;
         double precision;
-//        double[] x = null;
-//        double[] x = null;
-//        complex = null;
-//        Complex[] complex = null;
         int u = 0;
         double ksiA = 0;
         double ksiB = 0;
@@ -84,8 +68,20 @@ public class FourierTransform {
                 builder = bufferedReader.readLine();
                 if (builder != null) {
                     ksiA = Double.parseDouble(builder);
+                    builder = bufferedReader.readLine();
+                    if (builder != null) {
+                        ksiB = Double.parseDouble(builder);
+                    }
+                    //Проверка, что верхняя часть больше нижней
+                    if (ksiB <= ksiA) {
+                        System.out.println("Верхняя граница ξ меньше нижней! Поменяйте во входном файле диапазон ξ");
+                        System.exit(0);
+                    }
+                } else {
+                    System.out.println("Нет дальнейших значений диапазона ξ");
+                    System.exit(0);
                 }
-                //Считали верхнюю часть ξ
+                /*//Считали верхнюю часть ξ
                 builder = bufferedReader.readLine();
                 if (builder != null) {
                     ksiB = Double.parseDouble(builder);
@@ -94,7 +90,7 @@ public class FourierTransform {
                 if (ksiB <= ksiA) {
                     System.out.println("Верхняя граница ξ меньше нижней! Поменяйте во входном файле диапазон ξ");
                     System.exit(0);
-                }
+                }*/
                 //Заполняем массив ξ
                 double ksiStep = (ksiB - ksiA) / n; // Шаг
                 for (int i = 0; i < ksi.length; i++) {
@@ -107,6 +103,9 @@ public class FourierTransform {
                     int length = new Integer(builder);
                     x = new double[length];
                     complex = new Complex[length];
+                } else {
+                    System.out.println("Не указано количество отсчетов табулированной функции");
+                    System.exit(0);
                 }
                 //Заполняем массив x и y
                 String[] splitted;
@@ -121,7 +120,7 @@ public class FourierTransform {
                         } else {
                             System.out.println("Ошибка!");
                             System.out.println("Убедитесь, что массив значения табулированной функции состоят " +
-                                    "из трех числе в строке.");
+                                    "из x и вещественной и мнимой части функции в строке.");
                             System.exit(0);
                         }
                     }
@@ -130,6 +129,10 @@ public class FourierTransform {
                 System.out.println("Файл не найден!");
             } catch (IOException e) {
                 System.out.println("Ошибка ввода/вывода!");
+            } catch (NumberFormatException e) {
+                System.out.println("Неправильно считано число! Убедитесь, что нет текстовых символов в строке с " +
+                        "числами, или наличие табулированной функции");
+                System.exit(0);
             }
         }
 
@@ -156,7 +159,6 @@ public class FourierTransform {
         XYSeries seriesOfPhase = new XYSeries("Аргумент преобразования");
 
 
-        // TODO: 21.12.2015 Здесь
         FileWriter  fileWriter = null;
         try {
             fileWriter = new FileWriter(fileOfTransformFunction);
@@ -176,6 +178,10 @@ public class FourierTransform {
 
         } catch (IOException e) {
             System.out.println("Ошибка записи!");
+        } catch (NullPointerException e) {
+            System.out.println("Ошибка! Убедитесь, что нет текстовых символов в строке с числами, или наличие " +
+                    "табулированной функции");
+            System.exit(0);
         } finally {
             if (fileWriter != null) {
                 try {
@@ -191,54 +197,58 @@ public class FourierTransform {
         XYSeries realSeries = new XYSeries("Re");
         XYSeries imaginarySeries = new XYSeries("Im");
 
-        for (int i = 0; i < x.length ; i++) {
-            realSeries.add(x[i], complex[i].getReal());
-            imaginarySeries.add(x[i], complex[i].getImaginary());
-        }
-
-        collectionOfFunction.addSeries(realSeries);
-        collectionOfFunction.addSeries(imaginarySeries);
-        JFreeChart chartOfFunction = ChartFactory.createXYLineChart("f(x) = " + functionName, "x", "y",
-                collectionOfFunction, PlotOrientation.VERTICAL, true, true, true);
-
         try {
-            ChartUtilities.saveChartAsPNG(new File("picture/График функции " + functionName + ".png"),
-                    chartOfFunction, 800, 600);
-        } catch (IOException e) {
-            System.out.println("Ошибка записи!");
-        }
+            for (int i = 0; i < x.length ; i++) {
+                realSeries.add(x[i], complex[i].getReal());
+                imaginarySeries.add(x[i], complex[i].getImaginary());
+            }
 
-        collectionOfTransformFunction.addSeries(realSeriesOfTransformFunction);
-        collectionOfTransformFunction.addSeries(imaginarySeriesOfTransformFunction);
-        JFreeChart chart1 = ChartFactory.createXYLineChart("F(ξ)", "ξ", "y", collectionOfTransformFunction, PlotOrientation.VERTICAL, true, true, true);
+            collectionOfFunction.addSeries(realSeries);
+            collectionOfFunction.addSeries(imaginarySeries);
+            JFreeChart chartOfFunction = ChartFactory.createXYLineChart("f(x) = " + functionName, "x", "y",
+                    collectionOfFunction, PlotOrientation.VERTICAL, true, true, true);
 
-        try {
-            ChartUtilities.saveChartAsPNG(new File("picture/Преобразование Фурье " + functionName + ".png"), chart1,
-                    800, 600);
-        } catch (IOException e) {
-            System.out.println("Ошибка записи!");
-        }
+            try {
+                ChartUtilities.saveChartAsPNG(new File("picture/График функции " + functionName + ".png"),
+                        chartOfFunction, 800, 600);
+            } catch (IOException e) {
+                System.out.println("Ошибка записи!");
+            }
 
-        collectionOfIntensity.addSeries(seriesOfIntensity);
+            collectionOfTransformFunction.addSeries(realSeriesOfTransformFunction);
+            collectionOfTransformFunction.addSeries(imaginarySeriesOfTransformFunction);
+            JFreeChart chart1 = ChartFactory.createXYLineChart("F(ξ)", "ξ", "y", collectionOfTransformFunction, PlotOrientation.VERTICAL, true, true, true);
 
-        JFreeChart chart2 = ChartFactory.createXYLineChart("Квадрат модуля F(ξ)", "ξ", "y", collectionOfIntensity, PlotOrientation.VERTICAL, true, true, true);
+            try {
+                ChartUtilities.saveChartAsPNG(new File("picture/Преобразование Фурье " + functionName + ".png"), chart1,
+                        800, 600);
+            } catch (IOException e) {
+                System.out.println("Ошибка записи!");
+            }
 
-        try {
-            ChartUtilities.saveChartAsPNG(new File("picture/Квадрат модуля F(ξ) от " + functionName + ".png"), chart2,
-                    800, 600);
-        } catch (IOException e) {
-            System.out.println("Ошибка записи!");
-        }
+            collectionOfIntensity.addSeries(seriesOfIntensity);
 
-        collectionOfPhase.addSeries(seriesOfPhase);
+            JFreeChart chart2 = ChartFactory.createXYLineChart("Квадрат модуля F(ξ)", "ξ", "y", collectionOfIntensity, PlotOrientation.VERTICAL, true, true, true);
 
-        JFreeChart chart3 = ChartFactory.createXYLineChart("Аргумент F(ξ)", "ξ", "y", collectionOfPhase, PlotOrientation.VERTICAL, true, true, true);
+            try {
+                ChartUtilities.saveChartAsPNG(new File("picture/Квадрат модуля F(ξ) от " + functionName + ".png"), chart2,
+                        800, 600);
+            } catch (IOException e) {
+                System.out.println("Ошибка записи!");
+            }
 
-        try {
-            ChartUtilities.saveChartAsPNG(new File("picture/Аргумент F(ξ) от " + functionName + ".png"), chart3,
-                    800, 600);
-        } catch (IOException e) {
-            System.out.println("Ошибка записи!");
+            collectionOfPhase.addSeries(seriesOfPhase);
+
+            JFreeChart chart3 = ChartFactory.createXYLineChart("Аргумент F(ξ)", "ξ", "y", collectionOfPhase, PlotOrientation.VERTICAL, true, true, true);
+
+            try {
+                ChartUtilities.saveChartAsPNG(new File("picture/Аргумент F(ξ) от " + functionName + ".png"), chart3,
+                        800, 600);
+            } catch (IOException e) {
+                System.out.println("Ошибка записи!");
+            }
+        } catch (NullPointerException e) {
+            System.out.println("Ошибка! Убедитесь, что нет текстовых символов в строке с числами.");
         }
     }
 }
